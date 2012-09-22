@@ -79,7 +79,7 @@ void loop() {
       pickUp();
       break;
     case 51:
-      rainbowCycle(0);
+      drop();
       break;
     default:
       stationary();
@@ -91,26 +91,69 @@ void pickUp() {
   for(int i = 0; i < 5; i++){
     strip.setPixelColor(i, Color(0, 255, 0));
     strip.show();
-    delay(100);
+    delay(120);
   }
   // turns off each light indiv.
   for(int i = 0; i < 5; i++){
     int pixels[] = {i}; 
     fadeOut(pixels, 1, 3);  
   }
-  delay(100);
+  delay(120);
   // turns on each light indiv in reverse.
   for(int i = 4; i >= 0; i--){
     strip.setPixelColor(i, Color(0, 255, 0));
     strip.show();
-    delay(100);
+    delay(120);
   }
   // turns off each light indiv in reverse.
   for(int i = 4; i >= 0; i--){
     int pixels[] = {i}; 
     fadeOut(pixels, 1, 3);
   }
-  delay(100);
+  delay(120);
+}
+
+// @param int values for r, g, b for all pixels to be one color
+void setColor(int r, int g, int b) {
+  for(int i = 0; i < strip.numPixels(); i++) {
+      strip.setPixelColor(i, Color(r, g, b));
+      strip.show();
+  }
+}
+
+// sets the colors of each pixel with 2 
+// different colors alternating between pixels 
+void setColor(int r1, int g1, int b1, int r2, int g2, int b2) {
+  for(int index = 0; index < 5; index++) {
+    if(index % 2 == 0) {
+      strip.setPixelColor(index, Color(r1, g1 , b1));
+      strip.show();
+    }
+    else{
+      strip.setPixelColor(index, Color(r2, g2, b2));
+      strip.show();
+    }
+  }
+}
+
+void drop() {
+  int evenPixels[3] = {0, 2, 4};
+  int oddPixels[2] = {1, 3};
+  // even Lights
+  for(int i = 0; i < 3; i++) {
+    strip.setPixelColor(evenPixels[i], Color(25, 0, 186));
+  }
+  strip.show();
+  delay(10);
+  fadeOut(evenPixels, 3, 10);
+  
+  // odd lights
+  for(int i = 0; i < 2; i++) {
+    strip.setPixelColor(oddPixels[i], Color(0, 204, 55));
+  }
+  strip.show();
+  delay(10);
+  fadeOut(oddPixels, 2, 10);
 }
 
 // @param pixels is an array of the pixel indices that should be faded
@@ -166,18 +209,10 @@ void fadeOut(int pixels[], int length, int wait) {
 void stationary() {
   if(DEBUG) { Serial.print("stationary() - called\n"); }
   // set starting colors for the right side
-  for(int index = 0; index < 5; index++) {
-    if(index % 2 == 0) {
-      strip.setPixelColor(index, Color(213, 131 , 0));
-      strip.show();
-    }
-    else{
-      strip.setPixelColor(index, Color(24, 0, 213));
-      strip.show();
-    }
-  }
-  int pixels[] = {0, 2, 4}; 
-  fadeOut(pixels, 3, 50);
+  setColor(213, 131, 0, 131, 0, 213);
+
+  int pixels[] = {0, 1, 2, 3, 4}; 
+  fadeOut(pixels, 5, 50);
 }
 
 void rainbow(uint8_t wait) {

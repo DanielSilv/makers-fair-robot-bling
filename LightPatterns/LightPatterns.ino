@@ -49,6 +49,10 @@ Adafruit_WS2801 strip = Adafruit_WS2801(5, dataPin, clockPin);
 //Adafruit_WS2801 strip = Adafruit_WS2801(25, dataPin, clockPin, WS2801_GRB);
 //Adafruit_WS2801 strip = Adafruit_WS2801(25, WS2801_GRB);
 
+// global variables
+int robotState = 0; //for incoming byte
+boolean DEBUG = true;
+
 void setup() {
   Serial.begin(9600);
     
@@ -59,9 +63,27 @@ void setup() {
 }
 
 void loop() {
-    stationary();
-//    pickUp();
-//    rainbowCycle(0);
+  // if data available robot state is updated with one byte.  
+  if(Serial.available() > 0) {
+    robotState = Serial.read();
+    Serial.print("Byte Received: ");
+    Serial.println(robotState);
+  }
+  
+  // calls function depending on the byte recieved    
+  switch (robotState) {
+    case 49:
+      stationary();
+      break;
+    case 50:
+      pickUp();
+      break;
+    case 51:
+      rainbowCycle(0);
+      break;
+    default:
+      stationary();
+  }  
 }
 
 void pickUp() {
@@ -92,7 +114,7 @@ void pickUp() {
 // @param pixels is an array of the pixel indices that should be faded
 // @param length of the array
 void fadeOut(int pixels[], int length) {
-  Serial.print("fade - is called\n");
+  if(DEBUG) { Serial.print("fade - is called\n"); }
   boolean done = false;
   int FADEVALUE = 10;
   boolean fadedPixels[length];
@@ -140,7 +162,7 @@ void fadeOut(int pixels[], int length) {
 }
 
 void stationary() {
-  Serial.print("stationary() - called\n");
+  if(DEBUG) { Serial.print("stationary() - called\n"); }
   // set starting colors for the right side
   for(int index = 0; index < 5; index++) {
     if(index % 2 == 0) {

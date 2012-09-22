@@ -59,29 +59,33 @@ void setup() {
 }
 
 void loop() {
-  // Some example procedures showing how to display to the pixels
-  
-//  colorWipe(Color(255, 0, 0), 0);
-//  colorWipe(Color(0, 255, 0), 50);
-//  colorWipe(Color(0, 0, 255), 100);
     stationary();
+    pickUp();
 }
 
-void test(uint16_t index){
-  uint32_t c = strip.getPixelColor(index) ;
-  int b = c & 0x0000ff;
-  c >>= 8;
-  int g = c & 0x00ff;
-  c >>= 8;
-  int r = c;
-  Serial.print(r);
-  Serial.print("\t");
-  Serial.print(g);
-  Serial.print("\t");
-  Serial.print(b);
-  Serial.print("\n");
-  
-  
+void pickUp() {
+  for(int i = 0; i < 5; i++){
+    strip.setPixelColor(i, Color(0, 255, 0));
+    strip.show();
+    delay(100);
+  }
+  for(int i = 0; i < 5; i++){
+    strip.setPixelColor(i, Color(0, 0, 0));
+    strip.show();
+    delay(100);
+  }
+  delay(100);
+  for(int i = 4; i >= 0; i--){
+    strip.setPixelColor(i, Color(0, 255, 0));
+    strip.show();
+    delay(100);
+  }
+  for(int i = 4; i >= 0; i--){
+    strip.setPixelColor(i, Color(0, 0, 0));
+    strip.show();
+    delay(100);
+  }
+  delay(100);
 }
 
 void fadeOut() {
@@ -121,7 +125,7 @@ void fadeOut() {
       strip.setPixelColor(i, Color(r, g , b));
     }
     strip.show();
-    delay(40);
+    delay(50);
     // set done true, then check each index and if any are false
     // set done back to false.
     done = true;

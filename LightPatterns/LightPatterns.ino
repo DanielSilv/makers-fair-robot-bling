@@ -87,33 +87,35 @@ void loop() {
 }
 
 void pickUp() {
+  // turns on each light indiv.
   for(int i = 0; i < 5; i++){
     strip.setPixelColor(i, Color(0, 255, 0));
     strip.show();
     delay(100);
   }
+  // turns off each light indiv.
   for(int i = 0; i < 5; i++){
-    strip.setPixelColor(i, Color(0, 0, 0));
-    strip.show();
-    delay(100);
+    int pixels[] = {i}; 
+    fadeOut(pixels, 1, 3);  
   }
   delay(100);
+  // turns on each light indiv in reverse.
   for(int i = 4; i >= 0; i--){
     strip.setPixelColor(i, Color(0, 255, 0));
     strip.show();
     delay(100);
   }
+  // turns off each light indiv in reverse.
   for(int i = 4; i >= 0; i--){
-    strip.setPixelColor(i, Color(0, 0, 0));
-    strip.show();
-    delay(100);
+    int pixels[] = {i}; 
+    fadeOut(pixels, 1, 3);
   }
   delay(100);
 }
 
 // @param pixels is an array of the pixel indices that should be faded
 // @param length of the array
-void fadeOut(int pixels[], int length) {
+void fadeOut(int pixels[], int length, int wait) {
   if(DEBUG) { Serial.print("fade - is called\n"); }
   boolean done = false;
   int FADEVALUE = 10;
@@ -151,7 +153,7 @@ void fadeOut(int pixels[], int length) {
       strip.setPixelColor(pixelIndex, Color(r, g , b));
     }
     strip.show();
-    delay(50);
+    delay(wait);
     // set done true, then check each index and if any are false
     // set done back to false.
     done = true;
@@ -175,7 +177,7 @@ void stationary() {
     }
   }
   int pixels[] = {0, 2, 4}; 
-  fadeOut(pixels, 3);
+  fadeOut(pixels, 3, 50);
 }
 
 void rainbow(uint8_t wait) {

@@ -1,61 +1,29 @@
 #include "SPI.h"
 #include "Adafruit_WS2801.h"
 
-/*****************************************************************************
-Example sketch for driving Adafruit WS2801 pixels!
-
-
-  Designed specifically to work with the Adafruit RGB Pixels!
-  12mm Bullet shape ----> https://www.adafruit.com/products/322
-  12mm Flat shape   ----> https://www.adafruit.com/products/738
-  36mm Square shape ----> https://www.adafruit.com/products/683
-
-  These pixels use SPI to transmit the color data, and have built in
-  high speed PWM drivers for 24 bit color per pixel
-  2 pins are required to interface
-
-  Adafruit invests time and resources providing this open source code, 
-  please support Adafruit and open-source hardware by purchasing 
-  products from Adafruit!
-
-  Written by Limor Fried/Ladyada for Adafruit Industries.  
-  BSD license, all text above must be included in any redistribution
-
-*****************************************************************************/
-
-// Choose which 2 pins you will use for output.
-// Can be any valid output pins.
-// The colors of the wires may be totally different so
-// BE SURE TO CHECK YOUR PIXELS TO SEE WHICH WIRES TO USE!
 int dataPin  = 2;    // Yellow wire on Adafruit Pixels
 int clockPin = 3;    // Green wire on Adafruit Pixels
-
-// Don't forget to connect the ground wire to Arduino ground,
-// and the +5V wire to a +5V supply
-
-// Set the first variable to the NUMBER of pixels. 25 = 25 pixels in a row
-Adafruit_WS2801 strip = Adafruit_WS2801(5, dataPin, clockPin);
-
-// Optional: leave off pin numbers to use hardware SPI
-// (pinout is then specific to each board and can't be changed)
-//Adafruit_WS2801 strip = Adafruit_WS2801(25);
-
-// For 36mm LED pixels: these pixels internally represent color in a
-// different format.  Either of the above constructors can accept an
-// optional extra parameter: WS2801_RGB is 'conventional' RGB order
-// WS2801_GRB is the GRB order required by the 36mm pixels.  Other
-// than this parameter, your code does not need to do anything different;
-// the library will handle the format change.  Examples:
-//Adafruit_WS2801 strip = Adafruit_WS2801(25, dataPin, clockPin, WS2801_GRB);
-//Adafruit_WS2801 strip = Adafruit_WS2801(25, WS2801_GRB);
+const int numPixels = 10; // Number of LED pixels.
+const uint32_t white = Color(255, 255, 255);
+const uint32_t off = Color(0, 0, 0);
+Adafruit_WS2801 strip = Adafruit_WS2801(numPixels, dataPin, clockPin);
 
 // global variables
 int robotState = 0; //for incoming byte
-boolean DEBUG = true;
+boolean DEBUG = false;
+int pin1 = 10;
+int pin2 = 11;
+int pin3 = 12;
+int statePin1 = 1;
+int statePin2 = 0;
+int statePin3 = 1;
+int timesRun = 0;
 
 void setup() {
   Serial.begin(9600);
-    
+  pinMode(pin1, INPUT);
+  pinMode(pin2, INPUT);
+  pinMode(pin3, INPUT);
   strip.begin();
 
   // Update LED contents, to start they are all 'off'
@@ -63,38 +31,182 @@ void setup() {
 }
 
 void loop() {
-  // if data available robot state is updated with one byte.  
-  if(Serial.available() > 0) {
-    robotState = Serial.read();
-    Serial.print("Byte Received: ");
-    Serial.println(robotState);
+  readPins(pin1, pin2, pin3);
+}
+
+int readPins(int pin1, int pin2, int pin3) {
+  if(digitalRead(pin1) == 0 && digitalRead(pin2) == 0 && digitalRead(pin3) == 0) { // Forward
+    patternForward();
   }
-  
-  // calls function depending on the byte recieved    
-  switch (robotState) {
-    case 49:
-      stationary();
-      break;
-    case 50:
-      pickUp();
-      break;
-    case 51:
-      drop();
-      break;
-    default:
-      stationary();
-  }  
+  if(digitalRead(pin1) == 0 && digitalRead(pin2) == 0 && digitalRead(pin3) == 1) { // Backward
+    patternBackward();
+  }
+  if(digitalRead(pin1) == 0 && digitalRead(pin2) == 1 && digitalRead(pin3) == 1) { // Left
+    patternLeft();
+  }
+  if(digitalRead(pin1) == 0 && digitalRead(pin2) == 1 && digitalRead(pin3) == 0) { // Right
+    patternRight();
+  }
+  if(digitalRead(pin1) == 1 && digitalRead(pin2) == 1 && digitalRead(pin3) == 1) { // Picking up ball
+    pickUp();
+  }
+  if(digitalRead(pin1) == 1 && digitalRead(pin2) == 0 && digitalRead(pin3) == 0) { // Dropping ball
+    drop();
+  }
+  if(digitalRead(pin1) == 1 && digitalRead(pin2) == 0 && digitalRead(pin3) == 1) { // Stationary
+    stationary();
+  }
+}
+
+/***********************
+ * Basic LED Functions *
+ ***********************/
+/* ~Useful Information~
+ * strip.setPixelColor(int i, Color c) -- i = index of LED, c = Color object as RGB
+ * It updates the designated LED pixel with a color in memory. Does not show.
+ * 
+ * strip.show()
+ * Shows the color stored in the pixel. Use to actually update the colors physically.
+ *
+ * delay(int m) -- m = Number of milliseconds. (1000 milliseconds = 1 second)
+ * Adds a delay to the program. Use to keep colors from changing for some time.
+ *
+ * The index at '0' and '(numPixels - 1)' is the back of the LEDs. Daisy chain should hang from front of robot.
+ * Wiring -- Red is 5V. Blue is Ground (GND). Yellow is Data (Digital pin). Green is Clock (Digital pin).
+ */
+
+// Forward sweeps. 
+void patternForward() {
+ for(int index = 0; index < (numPixels / 2); index++) {
+   strip.setPixelColor(index, white);
+   strip.setPixelColor((numPixels - 1) - index, white);
+   strip.show();
+   delay(100);
+ }
+ 
+ for(int index = 0; index < (numPixels / 2); index++) {
+   strip.setPixelColor(index, off);
+   strip.setPixelColor((numPixels - 1) - index, off);
+   strip.show();
+   delay(75);
+ }
+ 
+ for(int index = 0; index < (numPixels / 2); index++) {
+   strip.setPixelColor(index, white);
+   strip.setPixelColor((numPixels - 1) - index, white);
+   strip.show();
+   delay(25);
+   strip.setPixelColor(index, off);
+   strip.setPixelColor((numPixels - 1) - index, off);
+   strip.show();
+   delay(25);
+ }
+}
+
+// Backward sweeps.
+void patternBackward() {
+  for(int index = (numPixels / 2) - 1; index >= 0; index--) {
+   strip.setPixelColor(index, white);
+   strip.setPixelColor((numPixels - 1) - index, white);
+   strip.show();
+   delay(100);
+ }
+ 
+ for(int index = (numPixels / 2) - 1; index >= 0; index--) {
+   strip.setPixelColor(index, off);
+   strip.setPixelColor((numPixels - 1) - index, off);
+   strip.show();
+   delay(75);
+ }
+ 
+ for(int index = (numPixels / 2) - 1; index >= 0; index--) {
+   strip.setPixelColor(index, white);
+   strip.setPixelColor((numPixels - 1) - index, white);
+   strip.show();
+   delay(25);
+   strip.setPixelColor(index, off);
+   strip.setPixelColor((numPixels - 1) - index, off);
+   strip.show();
+   delay(25);
+ }
+}
+
+// Counter-Clockwise sweeps.
+void patternLeft() {
+  for(int index = 0; index < (numPixels / 2); index++) {
+   strip.setPixelColor(((numPixels / 2) - 1) - index, white);
+   strip.setPixelColor((numPixels - 1) - index, white);
+   strip.show();
+   delay(100);
+ }
+ 
+ for(int index = 0; index < (numPixels / 2); index++) {
+   strip.setPixelColor(((numPixels / 2) - 1) - index, off);
+   strip.setPixelColor((numPixels - 1) - index, off);
+   strip.show();
+   delay(75);
+ }
+ 
+ for(int index = 0; index < (numPixels / 2); index++) {
+   strip.setPixelColor(((numPixels / 2) - 1) - index, white);
+   strip.setPixelColor((numPixels - 1) - index, white);
+   strip.show();
+   delay(25);
+   strip.setPixelColor(((numPixels / 2) - 1) - index, off);
+   strip.setPixelColor((numPixels - 1) - index, off);
+   strip.show();
+   delay(25);
+ }
+}
+
+// Clockwise sweeps. 
+void patternRight() {
+  for(int index = 0; index < (numPixels / 2); index++) {
+   strip.setPixelColor(index, white);
+   strip.setPixelColor((numPixels / 2) + index, white);
+   strip.show();
+   delay(100);
+ }
+ 
+ for(int index = 0; index < (numPixels / 2); index++) {
+   strip.setPixelColor(index, off);
+   strip.setPixelColor((numPixels / 2) + index, off);
+   strip.show();
+   delay(75);
+ }
+ 
+ for(int index = 0; index < (numPixels / 2); index++) {
+   strip.setPixelColor(index, white);
+   strip.setPixelColor((numPixels / 2) + index, white);
+   strip.show();
+   delay(25);
+   strip.setPixelColor(index, off);
+   strip.setPixelColor((numPixels / 2) + index, off);
+   strip.show();
+   delay(25);
+ }
 }
 
 void pickUp() {
-  // turns on each light indiv.
+  // turns on each light indiv right.
   for(int i = 0; i < 5; i++){
     strip.setPixelColor(i, Color(0, 255, 0));
     strip.show();
     delay(120);
   }
-  // turns off each light indiv.
+  // turns on each light indiv left.
+  for(int i = 5; i < 10; i++){
+    strip.setPixelColor(i, Color(0, 255, 0));
+    strip.show();
+    delay(120);
+  }
+  // turns off each light indiv right.
   for(int i = 0; i < 5; i++){
+    int pixels[] = {i}; 
+    fadeOut(pixels, 1, 3);  
+  }
+  // turns off each light indiv left.
+  for(int i = 5; i < 10; i++){
     int pixels[] = {i}; 
     fadeOut(pixels, 1, 3);  
   }

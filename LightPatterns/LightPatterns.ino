@@ -71,7 +71,7 @@ int readPins(int pin1, int pin2, int pin3) {
  * delay(int m) -- m = Number of milliseconds. (1000 milliseconds = 1 second)
  * Adds a delay to the program. Use to keep colors from changing for some time.
  *
- * The index at '0' and '(numPixels - 1)' is the back of the LEDs. Daisy chain should hang from front of robot.
+ * The index at '0'(Right) and '(numPixels - 1)' (Left) is the back of the LEDs. Daisy chain should hang from front of robot.
  * Wiring -- Red is 5V. Blue is Ground (GND). Yellow is Data (Digital pin). Green is Clock (Digital pin).
  */
 
@@ -131,8 +131,8 @@ void patternBackward() {
  }
 }
 
-// Counter-Clockwise sweeps.
-void patternLeft() {
+// Clockwise sweeps.
+void patternRight() {
   for(int index = 0; index < (numPixels / 2); index++) {
    strip.setPixelColor(((numPixels / 2) - 1) - index, white);
    strip.setPixelColor((numPixels - 1) - index, white);
@@ -159,8 +159,8 @@ void patternLeft() {
  }
 }
 
-// Clockwise sweeps. 
-void patternRight() {
+// Counter-Clockwise sweeps. 
+void patternLeft() {
   for(int index = 0; index < (numPixels / 2); index++) {
    strip.setPixelColor(index, white);
    strip.setPixelColor((numPixels / 2) + index, white);
@@ -188,41 +188,33 @@ void patternRight() {
 }
 
 void pickUp() {
+  int backLight[10] = {0, 9, 1, 8, 2, 7, 3, 6, 4, 5};
   // turns on each light indiv right.
-  for(int i = 0; i < 5; i++){
-    strip.setPixelColor(i, Color(0, 255, 0));
+  for(int i = 0; i < 10; i+=2){
+    strip.setPixelColor(backLight[i], Color(0, 255, 0));
+    strip.setPixelColor(backLight[i + 1], Color(0, 255, 0));
     strip.show();
-    delay(120);
-  }
-  // turns on each light indiv left.
-  for(int i = 5; i < 10; i++){
-    strip.setPixelColor(i, Color(0, 255, 0));
-    strip.show();
-    delay(120);
+    delay(90);
   }
   // turns off each light indiv right.
-  for(int i = 0; i < 5; i++){
-    int pixels[] = {i}; 
-    fadeOut(pixels, 1, 3);  
+  for(int i = 0; i < 5; i++){ 
+    int pixels[] = {i, 9 - i};
+    fadeOut(pixels, 1, 0);
   }
-  // turns off each light indiv left.
-  for(int i = 5; i < 10; i++){
-    int pixels[] = {i}; 
-    fadeOut(pixels, 1, 3);  
-  }
-  delay(120);
-  // turns on each light indiv in reverse.
-  for(int i = 4; i >= 0; i--){
-    strip.setPixelColor(i, Color(0, 255, 0));
+  delay(90);
+  // turns on each light indiv in reverse right.
+  for(int i = 10; i >= 0; i-=2){
+    strip.setPixelColor(backLight[i], Color(0, 255, 0));
+    strip.setPixelColor(backLight[i - 1], Color(0, 255, 0));
     strip.show();
-    delay(120);
+    delay(90);
   }
-  // turns off each light indiv in reverse.
+  // turns off each light indiv in reverse right.
   for(int i = 4; i >= 0; i--){
-    int pixels[] = {i}; 
-    fadeOut(pixels, 1, 3);
+    int pixels[] = {i, 9 - i};
+    fadeOut(pixels, 1, 0);
   }
-  delay(120);
+  delay(90);
 }
 
 // @param int values for r, g, b for all pixels to be one color
@@ -236,12 +228,20 @@ void setColor(int r, int g, int b) {
 // sets the colors of each pixel with 2 
 // different colors alternating between pixels 
 void setColor(int r1, int g1, int b1, int r2, int g2, int b2) {
-  for(int index = 0; index < 5; index++) {
-    if(index % 2 == 0) {
+  for(int index = 0; index < 10; index++) {
+    if(index % 2 == 0 && index < 5) {
       strip.setPixelColor(index, Color(r1, g1 , b1));
       strip.show();
     }
-    else{
+    else if(index % 2 != 0 && index < 5) {
+      strip.setPixelColor(index, Color(r2, g2, b2));
+      strip.show();
+    }
+    else if(index % 2 != 0 && index >= 5) {
+      strip.setPixelColor(index, Color(r1, g1 , b1));
+      strip.show();
+    }
+    else if(index % 2 == 0 && index >= 5) {
       strip.setPixelColor(index, Color(r2, g2, b2));
       strip.show();
     }
@@ -249,23 +249,23 @@ void setColor(int r1, int g1, int b1, int r2, int g2, int b2) {
 }
 
 void drop() {
-  int evenPixels[3] = {0, 2, 4};
-  int oddPixels[2] = {1, 3};
+  int evenPixels[6] = {0, 9, 2, 7, 4, 5};
+  int oddPixels[4] = {1, 8, 3, 6};
   // even Lights
-  for(int i = 0; i < 3; i++) {
+  for(int i = 0; i < 6; i++) {
     strip.setPixelColor(evenPixels[i], Color(25, 0, 186));
   }
   strip.show();
   delay(10);
-  fadeOut(evenPixels, 3, 10);
+  fadeOut(evenPixels, 6, 10);
   
   // odd lights
-  for(int i = 0; i < 2; i++) {
+  for(int i = 0; i < 4; i++) {
     strip.setPixelColor(oddPixels[i], Color(0, 204, 55));
   }
   strip.show();
   delay(10);
-  fadeOut(oddPixels, 2, 10);
+  fadeOut(oddPixels, 4, 10);
 }
 
 // @param pixels is an array of the pixel indices that should be faded
@@ -320,11 +320,10 @@ void fadeOut(int pixels[], int length, int wait) {
 
 void stationary() {
   if(DEBUG) { Serial.print("stationary() - called\n"); }
-  // set starting colors for the right side
+//  set starting colors for the right side
   setColor(213, 131, 0, 131, 0, 213);
-
-  int pixels[] = {0, 1, 2, 3, 4}; 
-  fadeOut(pixels, 5, 50);
+  int pixels[] = {0, 9, 1, 8, 2, 7, 3, 6, 4, 5}; 
+  fadeOut(pixels, 10, 50);
 }
 
 void rainbow(uint8_t wait) {
